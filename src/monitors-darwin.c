@@ -103,10 +103,11 @@ MONITOR *process_monitor(CGDirectDisplayID display){
     if(names == NULL || !CFDictionaryGetValueIfPresent(names, CFSTR("en_US"), (const void**) &value)){
       monitor->name = copy_str("Unknown");
     }else{
+
       CFIndex size = CFStringGetMaximumSizeForEncoding(CFStringGetLength(value),
-                                                       kCFStringEncodingASCII);
+                                                       kCFStringEncodingUTF8);
       char *name = calloc(size+1, sizeof(char));
-      CFStringGetCString(value, name, size, kCFStringEncodingASCII);
+      CFStringGetCString(value, name, size, kCFStringEncodingUTF8);
       monitor->name = name;
     }
     CFRelease(info);
