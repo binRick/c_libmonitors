@@ -43,6 +43,7 @@ bool process_mode(MODE *mode, CGDisplayModeRef display_mode, CVDisplayLinkRef di
         mode->_data = calloc(1, sizeof(MODE_DATA));
       mode->_data->mode_id = CGDisplayModeGetIODisplayModeID(display_mode);
 
+
       mode->width = (int)CGDisplayModeGetWidth(display_mode);
       mode->height = (int)CGDisplayModeGetHeight(display_mode);
       mode->refresh = (double)CGDisplayModeGetRefreshRate(display_mode);
@@ -117,11 +118,24 @@ MONITOR *process_monitor(CGDirectDisplayID display){
     const CGSize size = CGDisplayScreenSize(display);
     monitor->width = size.width;
     monitor->height = size.height;
-    
+    monitor->id = display;
     monitor->_data->display_id = display;
-
+    CFUUIDRef uuid_ref = CGDisplayCreateUUIDFromDisplayID(display);
+    if(uuid_ref){
+      CFStringRef uuid_str = CFUUIDCreateString(NULL, uuid_ref);
+      if(uuid_str){
+        CFIndex uuid_size = CFStringGetMaximumSizeForEncoding(CFStringGetLength(uuid_str),kCFStringEncodingUTF8);
+        monitor->uuid = calloc(uuid_size+1, sizeof(char));
+        CFStringGetCString(uuid_str, monitor->uuid, uuid_size, kCFStringEncodingUTF8);
+        CFRelease(uuid_str);
+      }else{
+        monitor->uuid = copy_str("Unknown");
+      }
+      CFRelease(uuid_ref);
+    }else{
+      monitor->uuid = copy_str("Unknown");
+    }
     detect_modes(monitor);
-
     return monitor;
   }
   return NULL;
@@ -137,7 +151,7 @@ MONITORS_EXPORT bool libmonitors_detect(int *ext_count, MONITOR ***ext_monitors)
   CGGetOnlineDisplayList(display_count, display_ids, &display_count);
   
   monitors = alloc_monitors(display_count);
-  for(int i=0; i<display_count; ++i){
+  for(uint32_t i=0; i<display_count; ++i){
     MONITOR *monitor = process_monitor(display_ids[i]);
     if(monitor != NULL){
       monitors[count] = monitor;

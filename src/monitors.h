@@ -30,8 +30,9 @@ extern "C" {
   };
   
   MONITORS_EXPORT struct libmonitors_monitor{
-    char *name;
+    char *name, *uuid;
     bool primary;
+    int id;
     int width;
     int height;
     int mode_count;
